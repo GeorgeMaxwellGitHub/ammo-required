@@ -7,7 +7,8 @@ A module for Foundry VTT 14 and the D&D 5e system 6.0.x. You cannot fire a bow w
 - In the attack roll dialog, weapons with the Ammunition property have no empty option: you cannot pick "no ammunition".
 - If there is no usable ammunition at all (none in the inventory, or all with quantity 0), the attack is blocked with a warning.
 - The same applies to quick rolls without the dialog (Shift-click): an empty choice remembered from the last attack is replaced with a usable ammunition.
-- The attack card in chat gets a line like "Ammunition: Arrow (7 left)". The remainder is recorded at the moment of the shot.
+- Every attack message in chat gets a line above the roll result, for example "Fired Longbow with Arrow +2 (7 left)". It shows the weapon and the ammunition that was actually chosen, so the GM can see at a glance what the player used. The remainder is recorded at the moment of the shot.
+- The module does not check that the ammunition type matches the weapon (a pistol bullet in a bow goes through). That is left to the GM, who reviews the chat line and rolls the attack back by hand if the choice is wrong.
 - The GM can turn the requirement off for a specific weapon, for example a bow that conjures its own arrows into a quiver.
 
 ## Settings (Game Settings → Configure Settings → Module Settings)
@@ -38,7 +39,7 @@ You need a character with a longbow (Ammunition property enabled) and an "Arrow"
 2. Set the arrow quantity to 0: the attack is blocked and a warning appears.
 3. Delete the arrows from the inventory entirely: the attack is blocked too.
 4. Fire once with arrows selected, then Shift-click without the dialog: a usable ammunition is substituted.
-5. Chat: the attack card has a line with the arrow name and the number left.
+5. Chat: above the roll result there is a line with the weapon, the arrow and the number left. Pick a +2 arrow once and check the line says so.
 6. The GM turns the requirement off for the bow with 0 arrows: the attack goes through as before.
 7. An NPC attack with a bow is not blocked (unless "Apply to NPCs" is on).
 

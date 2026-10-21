@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { ammoLeft, isEnforced, resolveAmmunition } from "../scripts/logic.mjs";
+import { ammoLeft, describeShot, isEnforced, resolveAmmunition } from "../scripts/logic.mjs";
 
 const opt = (value, extra = {}) => ({ value, label: value, ...extra });
 
@@ -59,4 +59,28 @@ test("ammunition left", () => {
   assert.equal(ammoLeft(8, false), 8);
   assert.equal(ammoLeft(0, true), 0);
   assert.equal(ammoLeft(undefined, true), 0);
+});
+
+test("describeShot: live items win, the snapshot supplies the remainder", () => {
+  const shot = describeShot({
+    weaponItem: { name: "Longbow" },
+    ammoItem: { name: "Arrow +2", img: "live.webp" },
+    snapshot: { weapon: "Old", name: "Old arrow", img: "old.webp", left: 7 }
+  });
+  assert.deepEqual(shot, { weapon: "Longbow", ammo: "Arrow +2", img: "live.webp", left: 7 });
+});
+
+test("describeShot: falls back to the snapshot when items cannot be resolved", () => {
+  const shot = describeShot({ snapshot: { weapon: "Longbow", name: "Arrow", img: "a.webp", left: 0 } });
+  assert.deepEqual(shot, { weapon: "Longbow", ammo: "Arrow", img: "a.webp", left: 0 });
+});
+
+test("describeShot: works from live data alone, remainder unknown", () => {
+  const shot = describeShot({ weaponItem: { name: "Longbow" }, ammoItem: { name: "Arrow" } });
+  assert.deepEqual(shot, { weapon: "Longbow", ammo: "Arrow", img: "", left: null });
+});
+
+test("describeShot: no ammunition means nothing to show", () => {
+  assert.equal(describeShot(), null);
+  assert.equal(describeShot({ weaponItem: { name: "Longbow" } }), null);
 });

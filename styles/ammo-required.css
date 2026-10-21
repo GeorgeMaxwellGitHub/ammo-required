@@ -2,14 +2,18 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 4px;
-  font-size: var(--font-size-12, 12px);
+  margin: 4px 0;
+  padding: 3px 6px;
+  border-left: 3px solid var(--color-border-light-primary, #999);
+  background: var(--color-cool-5-90, rgba(0, 0, 0, 0.05));
+  font-size: var(--font-size-13, 13px);
+  font-weight: bold;
 }
 
 .chat-message .ammo-required img {
   flex: 0 0 auto;
-  width: 18px;
-  height: 18px;
+  width: 20px;
+  height: 20px;
   border: none;
   object-fit: contain;
 }

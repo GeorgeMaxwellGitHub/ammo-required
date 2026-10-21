@@ -45,3 +45,24 @@ export function isEnforced({ enforce, includeNpc, itemType, hasAmmoProp, actorTy
 export function ammoLeft(quantity, consumed) {
   return Math.max(0, (Number(quantity) || 0) - (consumed ? 1 : 0));
 }
+
+/**
+ * Merges everything known about a shot into one description for the chat card.
+ * Live data wins over the snapshot taken when the message was created (the snapshot is the only
+ * source of the remainder, and a fallback when an item has been deleted or cannot be resolved).
+ * @param {object} data
+ * @param {{name?: string}|null} [data.weaponItem]               Weapon the attack was made with.
+ * @param {{name?: string, img?: string}|null} [data.ammoItem]   Ammunition item (may be a copy of a destroyed one).
+ * @param {{weapon?: string, name?: string, img?: string, left?: number}|null} [data.snapshot]
+ * @returns {{weapon: string, ammo: string, img: string, left: number|null}|null}  null when no ammunition was used.
+ */
+export function describeShot({ weaponItem, ammoItem, snapshot } = {}) {
+  const ammo = ammoItem?.name || snapshot?.name;
+  if (!ammo) return null;
+  return {
+    weapon: weaponItem?.name || snapshot?.weapon || "",
+    ammo,
+    img: ammoItem?.img || snapshot?.img || "",
+    left: Number.isFinite(snapshot?.left) ? snapshot.left : null
+  };
+}

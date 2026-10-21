@@ -1,4 +1,4 @@
-import { ammoLeft, isEnforced, resolveAmmunition } from "./logic.mjs";
+import { ammoLeft, describeShot, isEnforced, resolveAmmunition } from "./logic.mjs";
 
 const ID = "ammo-required";
 const TOGGLE_ACTION = `${ID}-toggle`;
@@ -87,50 +87,80 @@ Hooks.on("dnd5e.preRollAttackV2", (config, dialog) => {
 });
 
 /* -------------------------------------------- */
-/*  Attack card in chat                       */
+/*  Attack card in chat                         */
 /* -------------------------------------------- */
 
-// Remember the ammunition and what is left at the moment of the shot: it has not been consumed yet, so the remainder is computed here.
+/** Safe wrappers: these accessors exist on dnd5e chat messages, but a failure must never break chat. */
+function messageActor(message) {
+  let actor = null;
+  try { actor = message.getAssociatedActor?.(); } catch { /* fallback below */ }
+  return actor ?? ChatMessage.getSpeakerActor(message.speaker);
+}
+
+function messageWeapon(message) {
+  try { return message.getAssociatedItem?.() ?? null; } catch { return null; }
+}
+
+// Remember the ammunition, the weapon and what is left at the moment of the shot: nothing has been consumed
+// yet, so the remainder is computed here.
 Hooks.on("preCreateChatMessage", (message) => {
   try {
-    if (message.type !== "attack") return;
     const id = message.system?.ammunition;
     if (!id) return;
-    let actor = null;
-    try { actor = message.getAssociatedActor?.(); } catch { /* fallback below */ }
-    actor ??= ChatMessage.getSpeakerActor(message.speaker);
-    const ammo = actor?.items.get(id);
+    const ammo = messageActor(message)?.items.get(id);
     if (!ammo) return;
     const consumed = !ammo.system.properties?.has?.("ret");
     message.updateSource({
-      [`flags.${ID}.ammo`]: { name: ammo.name, img: ammo.img, left: ammoLeft(ammo.system.quantity, consumed) }
+      [`flags.${ID}.ammo`]: {
+        weapon: messageWeapon(message)?.name ?? "",
+        name: ammo.name,
+        img: ammo.img,
+        left: ammoLeft(ammo.system.quantity, consumed)
+      }
     });
   } catch (err) {
     console.warn(`${ID} | could not remember the ammunition for the card`, err);
   }
 });
 
-Hooks.on("renderChatMessageHTML", (message, html) => {
+function renderAmmoRow(message, html) {
   try {
-    const ammo = message.getFlag(ID, "ammo");
-    if (!ammo || message.isContentVisible === false) return;
-    const host = html.querySelector(".chat-card") ?? html.querySelector(".message-content") ?? html;
-    if (host.querySelector(".ammo-required")) return;
+    if (!message.system?.ammunition && !message.getFlag(ID, "ammo")) return;
+    if (message.isContentVisible === false || html.querySelector(".ammo-required")) return;
 
+    let ammoItem = null;
+    try { ammoItem = message.system?.ammunitionItem ?? null; } catch { /* destroyed and unresolvable: use the snapshot */ }
+    const shot = describeShot({ weaponItem: messageWeapon(message), ammoItem, snapshot: message.getFlag(ID, "ammo") });
+    if (!shot) return;
+
+    const key = shot.weapon
+      ? (shot.left === null ? "AMMO_REQUIRED.Chat.Fired" : "AMMO_REQUIRED.Chat.FiredLeft")
+      : (shot.left === null ? "AMMO_REQUIRED.Chat.Used" : "AMMO_REQUIRED.Chat.UsedLeft");
     const row = document.createElement("section");
     row.className = "icon-row ammo-required";
-    const img = document.createElement("img");
-    img.src = ammo.img;
-    img.alt = "";
+    if (shot.img) {
+      const img = document.createElement("img");
+      img.src = shot.img;
+      img.alt = "";
+      row.append(img);
+    }
     const text = document.createElement("span");
-    text.textContent = `${game.i18n.localize("AMMO_REQUIRED.Chat.Ammunition")}: ${ammo.name} `
-      + `(${game.i18n.format("AMMO_REQUIRED.Chat.Left", { n: ammo.left })})`;
-    row.append(img, text);
-    host.append(row);
+    text.textContent = game.i18n.format(key, { weapon: shot.weapon, ammo: shot.ammo, n: shot.left });
+    row.append(text);
+
+    // Show it above the roll result when the roll is found; otherwise at the end of the card.
+    const roll = html.querySelector(".dice-roll");
+    if (roll?.parentElement) roll.parentElement.insertBefore(row, roll);
+    else (html.querySelector(".chat-card") ?? html.querySelector(".message-content") ?? html).append(row);
   } catch (err) {
     console.warn(`${ID} | could not show the ammunition in the card`, err);
   }
-});
+}
+
+// dnd5e fires its own hook after all of its changes to the card; the core hook is a fallback.
+// The row is added only once, whichever hook gets there first.
+Hooks.on("dnd5e.renderChatMessage", renderAmmoRow);
+Hooks.on("renderChatMessageHTML", renderAmmoRow);
 
 /* -------------------------------------------- */
 /*  GM toggle in the item sheet   */

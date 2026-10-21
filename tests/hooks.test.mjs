@@ -105,23 +105,81 @@ test("the toggle sets and clears the flag", async () => {
   assert.equal("optional" in flags, false);
 });
 
-test("the card remembers the ammunition and what is left before it is consumed", () => {
-  const ammo = { name: "Arrow", img: "a.webp", system: { quantity: 5, properties: new Set() } };
-  const updates = [];
-  const message = {
-    type: "attack", system: { ammunition: "a1" }, speaker: {},
+const fakeEl = (tag) => ({
+  tag, className: "", children: [], parentElement: null, textContent: "", src: "", alt: "",
+  append(...c) { c.forEach((x) => { x.parentElement = this; this.children.push(x); }); },
+  insertBefore(n, ref) { n.parentElement = this; this.children.splice(this.children.indexOf(ref), 0, n); },
+  querySelector(sel) {
+    const cls = sel.replace(/^\./, "");
+    for (const c of this.children) {
+      if (c.className.split(" ").includes(cls)) return c;
+      const deep = c.querySelector(sel);
+      if (deep) return deep;
+    }
+    return null;
+  }
+});
+globalThis.document = { createElement: fakeEl };
+
+const message = (over = {}) => {
+  const flags = {};
+  const ammo = { name: "Arrow +2", img: "a.webp", system: { quantity: 5, properties: new Set() } };
+  return {
+    flags, ammo,
+    type: "attack", system: { ammunition: "a1", ammunitionItem: ammo }, speaker: {}, isContentVisible: true,
     getAssociatedActor: () => ({ items: { get: () => ammo } }),
-    updateSource: (d) => updates.push(d)
+    getAssociatedItem: () => ({ name: "Longbow" }),
+    getFlag: (_id, key) => flags[key],
+    updateSource(d) { flags.ammo = d["flags.ammo-required.ammo"]; },
+    ...over
   };
-  handlers.get("preCreateChatMessage")(message);
-  assert.deepEqual(updates[0]["flags.ammo-required.ammo"], { name: "Arrow", img: "a.webp", left: 4 });
+};
 
-  updates.length = 0;
-  ammo.system.properties = new Set(["ret"]);
-  handlers.get("preCreateChatMessage")(message);
-  assert.equal(updates[0]["flags.ammo-required.ammo"].left, 5);
+test("the card remembers weapon, ammunition and what is left before it is consumed", () => {
+  const m = message();
+  handlers.get("preCreateChatMessage")(m);
+  assert.deepEqual(m.flags.ammo, { weapon: "Longbow", name: "Arrow +2", img: "a.webp", left: 4 });
 
-  updates.length = 0;
-  handlers.get("preCreateChatMessage")({ ...message, type: "usage" });
-  assert.equal(updates.length, 0);
+  const retrievable = message();
+  retrievable.ammo.system.properties = new Set(["ret"]);
+  handlers.get("preCreateChatMessage")(retrievable);
+  assert.equal(retrievable.flags.ammo.left, 5);
+
+  const noAmmo = message({ system: { ammunition: null } });
+  handlers.get("preCreateChatMessage")(noAmmo);
+  assert.equal(noAmmo.flags.ammo, undefined);
+});
+
+test("the chat row is inserted above the roll, shows weapon, ammunition and remainder, and is added once", () => {
+  const m = message();
+  handlers.get("preCreateChatMessage")(m);
+
+  const html = fakeEl("div");
+  const card = fakeEl("div"); card.className = "chat-card";
+  const roll = fakeEl("div"); roll.className = "dice-roll";
+  card.append(roll); html.append(card);
+
+  handlers.get("dnd5e.renderChatMessage")(m, html);
+  handlers.get("renderChatMessageHTML")(m, html);
+  const rows = card.children.filter((c) => c.className.includes("ammo-required"));
+  assert.equal(rows.length, 1);
+  assert.ok(card.children.indexOf(rows[0]) < card.children.indexOf(roll));
+  const text = rows[0].children.at(-1).textContent;
+  assert.match(text, /^AMMO_REQUIRED\.Chat\.FiredLeft /);
+  assert.match(text, /"weapon":"Longbow".*"ammo":"Arrow \+2".*"n":4/);
+});
+
+test("the row still renders without the snapshot, from live message data", () => {
+  const html = fakeEl("div");
+  const card = fakeEl("div"); card.className = "chat-card"; html.append(card);
+  handlers.get("dnd5e.renderChatMessage")(message(), html);
+  const row = card.children.find((c) => c.className.includes("ammo-required"));
+  assert.ok(row);
+  assert.match(row.children.at(-1).textContent, /Longbow/);
+});
+
+test("nothing is shown for messages without ammunition", () => {
+  const html = fakeEl("div");
+  handlers.get("dnd5e.renderChatMessage")(message({ system: { ammunition: null } }), html);
+  assert.equal(html.children.length, 0);
 });

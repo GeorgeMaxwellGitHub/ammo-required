@@ -22,8 +22,10 @@
       "Failed": "Could not change the weapon setting."
     },
     "Chat": {
-      "Ammunition": "Ammunition",
-      "Left": "{n} left"
+      "Fired": "Fired {weapon} with {ammo}",
+      "FiredLeft": "Fired {weapon} with {ammo} ({n} left)",
+      "Used": "Ammunition: {ammo}",
+      "UsedLeft": "Ammunition: {ammo} ({n} left)"
     }
   }
 }
