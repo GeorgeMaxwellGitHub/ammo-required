@@ -1,0 +1,15 @@
+.chat-message .ammo-required {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: var(--font-size-12, 12px);
+}
+
+.chat-message .ammo-required img {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  border: none;
+  object-fit: contain;
+}

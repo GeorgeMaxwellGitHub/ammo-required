@@ -1,0 +1,48 @@
+{
+  "id": "ammo-required",
+  "title": "Required Ammunition",
+  "description": "For weapons with the Ammunition property (dnd5e), forbids attacking without a selected ammunition, blocks the attack when the quiver is empty, and shows in chat what was fired. The GM can turn the requirement off for individual weapons.",
+  "version": "0.1.0",
+  "authors": [
+    {
+      "name": "GeorgeMaxwell"
+    }
+  ],
+  "compatibility": {
+    "minimum": "14",
+    "verified": "14"
+  },
+  "relationships": {
+    "systems": [
+      {
+        "id": "dnd5e",
+        "type": "system",
+        "compatibility": {
+          "minimum": "6.0.0",
+          "verified": "6.0.6"
+        }
+      }
+    ]
+  },
+  "esmodules": [
+    "scripts/ammo-required.mjs"
+  ],
+  "styles": [
+    "styles/ammo-required.css"
+  ],
+  "languages": [
+    {
+      "lang": "en",
+      "name": "English",
+      "path": "lang/en.json"
+    },
+    {
+      "lang": "ru",
+      "name": "Русский",
+      "path": "lang/ru.json"
+    }
+  ],
+  "url": "https://github.com/GeorgeMaxwellGitHub/ammo-required",
+  "manifest": "https://github.com/GeorgeMaxwellGitHub/ammo-required/releases/latest/download/module.json",
+  "download": "https://github.com/GeorgeMaxwellGitHub/ammo-required/releases/download/v0.1.0/module.zip"
+}

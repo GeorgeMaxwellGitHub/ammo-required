@@ -1,0 +1,29 @@
+{
+  "AMMO_REQUIRED": {
+    "Settings": {
+      "Enforce": {
+        "Name": "Require ammunition",
+        "Hint": "Weapons with the Ammunition property cannot attack without a selected ammunition, and the attack is blocked when none is left. The GM can turn the requirement off for a single weapon from the item sheet's header menu."
+      },
+      "IncludeNpc": {
+        "Name": "Apply to NPCs",
+        "Hint": "By default the requirement only affects player characters: monster weapons usually have no ammunition items, so their attacks would be blocked otherwise."
+      }
+    },
+    "Toggle": {
+      "Required": "Ammunition required (click to stop requiring)",
+      "Optional": "Ammunition not required (click to require)"
+    },
+    "Notify": {
+      "NoAmmo": "{actor} has no ammunition for {weapon}.",
+      "Optional": "{weapon}: ammunition is no longer required.",
+      "Required": "{weapon}: ammunition is required again.",
+      "GmOnly": "Only the GM can change this.",
+      "Failed": "Could not change the weapon setting."
+    },
+    "Chat": {
+      "Ammunition": "Ammunition",
+      "Left": "{n} left"
+    }
+  }
+}
