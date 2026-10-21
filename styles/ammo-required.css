@@ -1,4 +1,5 @@
 .chat-message .ammo-required {
+  --ammo-required-color: #a855f7;
   display: flex;
   align-items: center;
   gap: 4px;
@@ -17,4 +18,10 @@
   height: 16px;
   border: none;
   object-fit: contain;
+}
+
+/* Highlight of the ammunition name. Override --ammo-required-color to change it. */
+.chat-message .ammo-required .ammo-required-name {
+  color: var(--ammo-required-color);
+  font-weight: bold;
 }

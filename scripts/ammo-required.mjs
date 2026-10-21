@@ -2,6 +2,7 @@ import { ammoLeft, describeShot, isEnforced, resolveAmmunition } from "./logic.m
 
 const ID = "ammo-required";
 const TOGGLE_ACTION = `${ID}-toggle`;
+const AMMO_MARK = "\u2063AMMO\u2063";
 
 /* -------------------------------------------- */
 /*  Settings and API                             */
@@ -144,8 +145,14 @@ function renderAmmoRow(message, html) {
       img.alt = "";
       row.append(img);
     }
+    // The ammunition name gets its own highlighted element. The translated sentence is formatted with a marker in
+    // its place and split there, so every language keeps its own word order.
     const text = document.createElement("span");
-    text.textContent = game.i18n.format(key, { weapon: shot.weapon, ammo: shot.ammo, n: shot.left });
+    const [before, after = ""] = game.i18n.format(key, { weapon: shot.weapon, ammo: AMMO_MARK, n: shot.left }).split(AMMO_MARK);
+    const name = document.createElement("span");
+    name.className = "ammo-required-name";
+    name.textContent = shot.ammo;
+    text.append(document.createTextNode(before), name, document.createTextNode(after));
     row.append(text);
 
     // Show it above the whole roll result row (the roll sits inside an icon-row next to a dice icon, and putting

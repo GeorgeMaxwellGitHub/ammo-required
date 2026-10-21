@@ -124,7 +124,7 @@ const fakeEl = (tag) => ({
     return null;
   }
 });
-globalThis.document = { createElement: fakeEl };
+globalThis.document = { createElement: fakeEl, createTextNode: (t) => ({ ...fakeEl("#text"), textContent: t }) };
 
 const message = (over = {}) => {
   const flags = {};
@@ -172,9 +172,12 @@ test("the chat row goes above the whole roll row (not inside it), shows weapon, 
   assert.equal(rows[0].className, "ammo-required");
   assert.ok(card.children.indexOf(rows[0]) < card.children.indexOf(rollRow));
   assert.equal(rollRow.children.length, 1, "nothing was added inside the roll row");
-  const text = rows[0].children.at(-1).textContent;
-  assert.match(text, /^AMMO_REQUIRED\.Chat\.FiredLeft /);
-  assert.match(text, /"weapon":"Longbow".*"ammo":"Arrow \+2".*"n":4/);
+  const sentence = rows[0].children.at(-1);
+  const [before, name, after] = sentence.children;
+  assert.equal(name.className, "ammo-required-name");
+  assert.equal(name.textContent, "Arrow +2", "the ammunition name is its own highlighted element");
+  assert.match(before.textContent, /^AMMO_REQUIRED\.Chat\.FiredLeft /);
+  assert.match(before.textContent + after.textContent, /"weapon":"Longbow".*"n":4/);
 });
 
 test("the row still renders without the snapshot, from live message data", () => {
@@ -183,7 +186,7 @@ test("the row still renders without the snapshot, from live message data", () =>
   handlers.get("dnd5e.renderChatMessage")(message(), html);
   const row = card.children.find((c) => c.className.includes("ammo-required"));
   assert.ok(row);
-  assert.match(row.children.at(-1).textContent, /Longbow/);
+  assert.match(row.children.at(-1).children[0].textContent, /Longbow/);
 });
 
 test("nothing is shown for messages without ammunition", () => {
