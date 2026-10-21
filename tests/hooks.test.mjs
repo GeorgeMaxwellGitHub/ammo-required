@@ -109,6 +109,11 @@ const fakeEl = (tag) => ({
   tag, className: "", children: [], parentElement: null, textContent: "", src: "", alt: "",
   append(...c) { c.forEach((x) => { x.parentElement = this; this.children.push(x); }); },
   insertBefore(n, ref) { n.parentElement = this; this.children.splice(this.children.indexOf(ref), 0, n); },
+  closest(sel) {
+    const cls = sel.replace(/^\./, "");
+    for (let e = this; e; e = e.parentElement) if (e.className.split(" ").includes(cls)) return e;
+    return null;
+  },
   querySelector(sel) {
     const cls = sel.replace(/^\./, "");
     for (const c of this.children) {
@@ -150,20 +155,23 @@ test("the card remembers weapon, ammunition and what is left before it is consum
   assert.equal(noAmmo.flags.ammo, undefined);
 });
 
-test("the chat row is inserted above the roll, shows weapon, ammunition and remainder, and is added once", () => {
+test("the chat row goes above the whole roll row (not inside it), shows weapon, ammunition and remainder, once", () => {
   const m = message();
   handlers.get("preCreateChatMessage")(m);
 
   const html = fakeEl("div");
   const card = fakeEl("div"); card.className = "chat-card";
+  const rollRow = fakeEl("section"); rollRow.className = "icon-row";
   const roll = fakeEl("div"); roll.className = "dice-roll";
-  card.append(roll); html.append(card);
+  rollRow.append(roll); card.append(rollRow); html.append(card);
 
   handlers.get("dnd5e.renderChatMessage")(m, html);
   handlers.get("renderChatMessageHTML")(m, html);
   const rows = card.children.filter((c) => c.className.includes("ammo-required"));
   assert.equal(rows.length, 1);
-  assert.ok(card.children.indexOf(rows[0]) < card.children.indexOf(roll));
+  assert.equal(rows[0].className, "ammo-required");
+  assert.ok(card.children.indexOf(rows[0]) < card.children.indexOf(rollRow));
+  assert.equal(rollRow.children.length, 1, "nothing was added inside the roll row");
   const text = rows[0].children.at(-1).textContent;
   assert.match(text, /^AMMO_REQUIRED\.Chat\.FiredLeft /);
   assert.match(text, /"weapon":"Longbow".*"ammo":"Arrow \+2".*"n":4/);

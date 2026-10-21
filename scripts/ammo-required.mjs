@@ -137,7 +137,7 @@ function renderAmmoRow(message, html) {
       ? (shot.left === null ? "AMMO_REQUIRED.Chat.Fired" : "AMMO_REQUIRED.Chat.FiredLeft")
       : (shot.left === null ? "AMMO_REQUIRED.Chat.Used" : "AMMO_REQUIRED.Chat.UsedLeft");
     const row = document.createElement("section");
-    row.className = "icon-row ammo-required";
+    row.className = "ammo-required";
     if (shot.img) {
       const img = document.createElement("img");
       img.src = shot.img;
@@ -148,9 +148,11 @@ function renderAmmoRow(message, html) {
     text.textContent = game.i18n.format(key, { weapon: shot.weapon, ammo: shot.ammo, n: shot.left });
     row.append(text);
 
-    // Show it above the roll result when the roll is found; otherwise at the end of the card.
+    // Show it above the whole roll result row (the roll sits inside an icon-row next to a dice icon, and putting
+    // the line inside that row squeezes it); otherwise at the end of the card.
     const roll = html.querySelector(".dice-roll");
-    if (roll?.parentElement) roll.parentElement.insertBefore(row, roll);
+    const anchor = roll?.closest?.(".icon-row") ?? roll;
+    if (anchor?.parentElement) anchor.parentElement.insertBefore(row, anchor);
     else (html.querySelector(".chat-card") ?? html.querySelector(".message-content") ?? html).append(row);
   } catch (err) {
     console.warn(`${ID} | could not show the ammunition in the card`, err);
